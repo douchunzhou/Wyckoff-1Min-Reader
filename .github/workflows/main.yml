@@ -52,7 +52,7 @@ jobs:
           # 在 Actions 里强制启用“交易日+时间窗”闸门
           ENFORCE_A_SHARE_SCHEDULE: "1"
           # 目标推送时间（北京时区，HHMM）
-          A_SHARE_PUSH_SLOTS: "1140,1520"
+          A_SHARE_PUSH_SLOTS: "1130,1520"
           # 允许在目标时间后多晚仍执行（分钟）
           A_SHARE_SLOT_LAG_MINUTES: "60"
 
