@@ -103,8 +103,24 @@ jobs:
             echo "has_reports=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Detect Notify Status
+        id: detect_notify_status
+        if: always()
+        shell: bash
+        run: |
+          SHOULD_NOTIFY="true"
+          if [ -f run_status.txt ]; then
+            STATUS_TEXT="$(cat run_status.txt)"
+            case "$STATUS_TEXT" in
+              *"SKIP: outside time window"*|*"SKIP: already ran today"*)
+                SHOULD_NOTIFY="false"
+                ;;
+            esac
+          fi
+          echo "should_notify=${SHOULD_NOTIFY}" >> "$GITHUB_OUTPUT"
+
       - name: Notify Telegram (Status)
-        if: always() && steps.detect_reports.outputs.has_reports != 'true'
+        if: always() && steps.detect_reports.outputs.has_reports != 'true' && steps.detect_notify_status.outputs.should_notify == 'true'
         env:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
