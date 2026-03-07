@@ -8,8 +8,8 @@ on:
     #
     # 北京 11:40 约等于 UTC 03:40；北京 15:20 约等于 UTC 07:20。
     # 触发窗口覆盖前后 20 分钟以对冲调度延迟。
-    - cron: "*/5 3 * * 1-5"   # UTC 03:00-03:59 (覆盖北京 11:00-11:59)
-    - cron: "*/5 7 * * 1-5"   # UTC 07:00-07:59 (覆盖北京 15:00-15:59)
+    - cron: "*/5 3-4 * * 1-5"   # UTC 03:00-03:59 (覆盖北京 11:00-11:59)
+    - cron: "*/5 7-8 * * 1-5"   # UTC 07:00-07:59 (覆盖北京 15:00-15:59)
 
 permissions:
   contents: write
@@ -54,7 +54,7 @@ jobs:
           # 目标推送时间（北京时区，HHMM）
           A_SHARE_PUSH_SLOTS: "1140,1520"
           # 允许在目标时间后多晚仍执行（分钟）
-          A_SHARE_SLOT_LAG_MINUTES: "20"
+          A_SHARE_SLOT_LAG_MINUTES: "60"
 
           # === 1. Google 官方 Gemini 配置 ===
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
