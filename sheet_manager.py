@@ -72,6 +72,7 @@ class SheetManager:
             # 如果表格里没填，默认给 None，交给 main.py 处理默认值
             timeframe = row[4].strip() if len(row) > 4 else "5"
             bars = row[5].strip() if len(row) > 5 else "500"
+            note = row[6].strip() if len(row) > 6 else ""
             
             # 简单的清洗，确保不为空
             if not timeframe: timeframe = "5"
@@ -81,8 +82,9 @@ class SheetManager:
                 "date": buy_date, 
                 "price": price, 
                 "qty": qty,
-                "timeframe": timeframe, # 新增
-                "bars": bars            # 新增
+                "timeframe": timeframe,
+                "bars": bars,
+                "note": note
             }
         return stocks
 

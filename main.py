@@ -655,6 +655,7 @@ def get_prompt_content(symbol, df, position_info):
     buy_date = safe_get('date')
     buy_price = safe_get('price')
     qty = safe_get('qty')
+    user_note = safe_get('note')
 
     position_text = (
         f"\n\n[USER POSITION DATA]\n"
@@ -663,7 +664,8 @@ def get_prompt_content(symbol, df, position_info):
         f"Buy Date: {buy_date}\n"
         f"Cost Price: {buy_price}\n"
         f"Quantity: {qty}\n"
-        f"(Note: Please analyze the current trend based on this position data and timeframe.)"
+        f"User Note: {user_note}\n"
+        f"(Note: Please analyze the current trend based on this position data, user note, and timeframe.)"
     )
     return base_prompt + position_text
 
