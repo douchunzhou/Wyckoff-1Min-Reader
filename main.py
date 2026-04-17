@@ -684,8 +684,8 @@ def call_openai_official(prompt: str) -> str:
 def call_custom_api(prompt: str) -> str:
     api_key = os.getenv("CUSTOM_API_KEY") 
     if not api_key: raise ValueError("CUSTOM_API_KEY missing")
-    base_url = "https://api2.qiandao.mom/v1"
-    model_name = "DeepSeek-V3.2-a"
+    base_url = "https://v2.aicodee.com/v1"
+    model_name = "MiniMax-M2.7-highspeed"
     client = OpenAI(api_key=api_key, base_url=base_url)
     resp = client.chat.completions.create(
         model=model_name,
@@ -694,9 +694,26 @@ def call_custom_api(prompt: str) -> str:
     )
     return resp.choices[0].message.content
 
+
+def send_telegram_error(bot_token, chat_id, symbol, error_msg):
+    """AI 分析失败时发送通知"""
+    if not bot_token or not chat_id:
+        return
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    text = f"❌ AI分析失败 - {symbol}\n原因: {error_msg[:200]}"
+    try:
+        requests.post(url, json={"chat_id": chat_id, "text": text}, timeout=10)
+    except:
+        pass
+
+
 def ai_analyze(symbol, df, position_info):
     prompt = get_prompt_content(symbol, df, position_info)
     if not prompt: return "Error: No Prompt"
+    
+    bot_token = os.getenv("TG_BOT_TOKEN")
+    chat_id = os.getenv("TG_CHAT_ID")
+    
     try:
         return call_gemini_http(prompt)
     except Exception as e1:
@@ -704,11 +721,9 @@ def ai_analyze(symbol, df, position_info):
         try:
             return call_custom_api(prompt)
         except Exception as e2:
-            print(f"    ⚠️ Custom API 失败: {str(e2)[:100]} -> 切 OpenAI", flush=True)
-            try:
-                return call_openai_official(prompt)
-            except Exception as e3:
-                return f"Analysis Failed. All APIs down. Error: {e3}"
+            print(f"    ⚠️ Custom API 失败: {str(e2)[:100]}", flush=True)
+            send_telegram_error(bot_token, chat_id, symbol, f"Gemini: {str(e1)[:100]}, Custom: {str(e2)[:100]}")
+            return f"AI分析失败: Gemini和Custom API均不可用"
 
 # ==========================================
 # 4. PDF 生成模块
