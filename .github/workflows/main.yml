@@ -2,9 +2,18 @@ name: Daily Stock AI Report
 
 on:
   workflow_dispatch:
+    inputs:
+      skip_schedule:
+        description: '跳过时间窗口检查 (手动触发时使用)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
   schedule:
-    # GitHub Actions schedule 可能会有分钟级延迟。为保证“交易日 11:40/15:20(北京)”尽量准时，
-    # 这里在目标时间段做高频触发，真正是否执行由 main.py 内部的“交易日+时间窗+去重”闸门决定。
+    # GitHub Actions schedule 可能会有分钟级延迟。为保证"交易日 11:40/15:20(北京)"尽量准时，
+    # 这里在目标时间段做高频触发，真正是否执行由 main.py 内部的"交易日+时间窗+去重"闸门决定。
     #
     # 北京 11:40 约等于 UTC 03:40；北京 15:20 约等于 UTC 07:20。
     # 触发窗口覆盖前后 20 分钟以对冲调度延迟。
@@ -16,7 +25,7 @@ permissions:
 
 concurrency:
   group: stock-ai-report-main
-  # 高频触发时，禁止取消正在跑的任务，否则会导致“本该准时推送”的任务被下一次触发打断。
+  # 高频触发时，禁止取消正在跑的任务，否则会导致"本该准时推送"的任务被下一次触发打断。
   cancel-in-progress: false
 
 jobs:
@@ -44,45 +53,54 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # 确保包含 baostock
           pip install pandas akshare mplfinance openai requests markdown xhtml2pdf gspread google-auth baostock
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Run Analysis Script
+      - name: Run Analysis Script (Scheduled)
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.skip_schedule != 'true' }}
         env:
           PYTHONUNBUFFERED: "1"
-          # 在 Actions 里强制启用“交易日+时间窗”闸门
           ENFORCE_A_SHARE_SCHEDULE: "1"
-          # 目标推送时间（北京时区，HHMM）
           A_SHARE_PUSH_SLOTS: "1130,1520"
-          # 允许在目标时间后多晚仍执行（分钟）
           A_SHARE_SLOT_LAG_MINUTES: "60"
-
-          # === 1. Google 官方 Gemini 配置 ===
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: "gemini-3-flash-preview"
-          
-          # ✅ 修改点：按您要求，最多重试 1 次，快速失败切换下一级
           GEMINI_MAX_RETRIES: "1"
           GEMINI_BASE_SLEEP: "3"
           GEMINI_TIMEOUT: "120"
-
-          # === 2. 自定义 API (Qiandao) 配置 ===
-          # ⚠️ 记得去 GitHub Secrets 添加 CUSTOM_API_KEY
           CUSTOM_API_KEY: ${{ secrets.CUSTOM_API_KEY }}
-
-          # === 3. OpenAI/DeepSeek 兜底配置 ===
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           AI_MODEL: "gpt-4o"
-          
-          # === 业务配置 ===
           WYCKOFF_PROMPT_TEMPLATE: ${{ secrets.WYCKOFF_PROMPT_TEMPLATE }}
           BARS_COUNT: "600"
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
           SHEET_NAME: ${{ secrets.SHEET_NAME }}
         run: |
           mkdir -p data reports
-          # 防止 checkout 出来仓库里残留的旧 push_list 导致“非交易日重复推送旧报告”
+          rm -f push_list.txt run_status.txt
+          python main.py
+
+      - name: Run Analysis Script (Manual Skip)
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.skip_schedule == 'true' }}
+        env:
+          PYTHONUNBUFFERED: "1"
+          ENFORCE_A_SHARE_SCHEDULE: "0"
+          A_SHARE_PUSH_SLOTS: "1130,1520"
+          A_SHARE_SLOT_LAG_MINUTES: "60"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: "gemini-3-flash-preview"
+          GEMINI_MAX_RETRIES: "1"
+          GEMINI_BASE_SLEEP: "3"
+          GEMINI_TIMEOUT: "120"
+          CUSTOM_API_KEY: ${{ secrets.CUSTOM_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          AI_MODEL: "gpt-4o"
+          WYCKOFF_PROMPT_TEMPLATE: ${{ secrets.WYCKOFF_PROMPT_TEMPLATE }}
+          BARS_COUNT: "600"
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+          SHEET_NAME: ${{ secrets.SHEET_NAME }}
+        run: |
+          mkdir -p data reports
           rm -f push_list.txt run_status.txt
           python main.py
 
@@ -91,8 +109,6 @@ jobs:
           echo "Cleaning up files older than 7 days..."
           find reports/ -name "*.*" -type f -mtime +7 -print -delete
           find data/ -name "*.csv" -type f -mtime +7 -print -delete
-
-      # 不再推送生成文件到仓库；仅通过 Telegram 通知运行情况/报告
 
       - name: Detect Reports
         id: detect_reports
@@ -164,7 +180,7 @@ jobs:
                    -F "chat_id=${TG_CHAT_ID}" \
                    -F "document=@$PDF_FILE" \
                    -F "caption=$CAPTION"
-                
+               
               echo "Sent."
               sleep 3
             fi
