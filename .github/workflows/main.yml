@@ -64,7 +64,7 @@ jobs:
           A_SHARE_PUSH_SLOTS: "1130,1520"
           A_SHARE_SLOT_LAG_MINUTES: "60"
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: "gemini-3-flash-preview"
+          GEMINI_MODEL: "gemini-3.1-flash"
           GEMINI_MAX_RETRIES: "1"
           GEMINI_BASE_SLEEP: "3"
           GEMINI_TIMEOUT: "120"
@@ -88,7 +88,7 @@ jobs:
           A_SHARE_PUSH_SLOTS: "1130,1520"
           A_SHARE_SLOT_LAG_MINUTES: "60"
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: "gemini-3-flash-preview"
+          GEMINI_MODEL: "gemini-3.1-flash"
           GEMINI_MAX_RETRIES: "1"
           GEMINI_BASE_SLEEP: "3"
           GEMINI_TIMEOUT: "120"
