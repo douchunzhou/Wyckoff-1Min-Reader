@@ -669,6 +669,18 @@ def get_prompt_content(symbol, df, position_info):
     )
     return base_prompt + position_text
 
+def call_openai_official(prompt: str) -> str:
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key: raise ValueError("OPENAI_API_KEY missing")
+    model_name = os.getenv("AI_MODEL", "gpt-4o")
+    client = OpenAI(api_key=api_key)
+    resp = client.chat.completions.create(
+        model=model_name,
+        messages=[{"role": "system", "content": "You are Richard D. Wyckoff."}, {"role": "user", "content": prompt}],
+        temperature=0.2
+    )
+    return resp.choices[0].message.content
+
 def call_custom_api(prompt: str) -> str:
     api_key = os.getenv("CUSTOM_API_KEY") 
     if not api_key: raise ValueError("CUSTOM_API_KEY missing")
