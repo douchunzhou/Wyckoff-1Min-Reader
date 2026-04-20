@@ -62,17 +62,14 @@ jobs:
           PYTHONUNBUFFERED: "1"
           ENFORCE_A_SHARE_SCHEDULE: "1"
           A_SHARE_PUSH_SLOTS: "1130,1520"
-          A_SHARE_SLOT_LAG_MINUTES: "60"
+          A_SHARE_SLOT_LAG_MINUTES: "90"
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: "gemini-3-flash-preview"
           GEMINI_MAX_RETRIES: "1"
           GEMINI_BASE_SLEEP: "3"
           GEMINI_TIMEOUT: "120"
           CUSTOM_API_KEY: ${{ secrets.CUSTOM_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          AI_MODEL: "gpt-4o"
           WYCKOFF_PROMPT_TEMPLATE: ${{ secrets.WYCKOFF_PROMPT_TEMPLATE }}
-          BARS_COUNT: "600"
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
           SHEET_NAME: ${{ secrets.SHEET_NAME }}
         run: |
@@ -86,17 +83,14 @@ jobs:
           PYTHONUNBUFFERED: "1"
           ENFORCE_A_SHARE_SCHEDULE: "0"
           A_SHARE_PUSH_SLOTS: "1130,1520"
-          A_SHARE_SLOT_LAG_MINUTES: "60"
+          A_SHARE_SLOT_LAG_MINUTES: "90"
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: "gemini-3-flash-preview"
           GEMINI_MAX_RETRIES: "1"
           GEMINI_BASE_SLEEP: "3"
           GEMINI_TIMEOUT: "120"
           CUSTOM_API_KEY: ${{ secrets.CUSTOM_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          AI_MODEL: "gpt-4o"
           WYCKOFF_PROMPT_TEMPLATE: ${{ secrets.WYCKOFF_PROMPT_TEMPLATE }}
-          BARS_COUNT: "600"
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
           SHEET_NAME: ${{ secrets.SHEET_NAME }}
         run: |
