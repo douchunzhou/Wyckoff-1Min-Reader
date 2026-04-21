@@ -136,6 +136,10 @@ def _last_completed_bar_end(now_bj: datetime, tf_min: int, trade_days: set[str])
     a_close = now_bj.replace(hour=15, minute=0, second=0, microsecond=0)
 
     if now_bj < m_open:
+        # [逻辑风险提示-2]
+        # 这里在“盘前(09:30前)”返回的是“今天15:00”，属于未来时间。
+        # 后续 _ensure_latest_data() 用 expected(=这里返回值) - last_ts 计算 lag_min，可能导致误判“数据不够新(stale)”。
+        # 若需要更严谨的“最后完成K线”，通常应返回“上一交易日15:00”或盘前跳过 freshness 校验。
         return a_close
     if m_open <= now_bj <= m_close:
         minutes = int((now_bj - m_open).total_seconds() // 60)
@@ -497,6 +501,11 @@ def fetch_stock_data_dynamic(symbol: str, timeframe_str: str, bar_count_str: str
     total_minutes = limit * tf_min
     days_back = int((total_minutes / 240) * 2.5) + 10 
     
+    # [逻辑风险提示-1]
+    # 项目里交易日闸门/数据新鲜度判断使用的是北京时区 _bj_now()；
+    # 但这里（以及后面 BaoStock 的 end_date）使用 datetime.now()（运行环境本地时区，Actions 通常是 UTC）。
+    # 在跨时区运行时可能出现“日期少一天/多一天”，导致历史K线缺口或合并后时间段不一致。
+    # 若要彻底规避，建议统一使用 _bj_now() 来生成 start/end date。
     start_date_dt = datetime.now() - timedelta(days=days_back)
     start_date_str = start_date_dt.strftime("%Y-%m-%d")
     start_date_ak_str = start_date_dt.strftime("%Y%m%d")
@@ -513,6 +522,7 @@ def fetch_stock_data_dynamic(symbol: str, timeframe_str: str, bar_count_str: str
             if lg.error_code == '0':
                 rs = bs.query_history_k_data_plus(
                     bs_code, "date,time,open,high,low,close,volume",
+                    # [逻辑风险提示-1] end_date 同样使用了 datetime.now()（可能是 UTC），建议与 _bj_now() 统一。
                     start_date=start_date_str, end_date=datetime.now().strftime("%Y-%m-%d"),
                     frequency=str(tf_min), adjustflag="3"
                 )
@@ -733,6 +743,11 @@ def generate_pdf_report(symbol, chart_path, report_text, pdf_path):
     html_content = markdown.markdown(report_text)
     abs_chart_path = os.path.abspath(chart_path)
     font_path = "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc"
+    # [逻辑风险提示-3]
+    # 字体路径存在跨平台差异：
+    # - GitHub Actions(ubuntu) 安装 fonts-wqy-microhei 后通常有该路径；
+    # - Windows 本地一般没有该路径，且 fallback 的 "msyh.ttc" 如果不是绝对路径，xhtml2pdf 可能找不到字体导致中文乱码/方框。
+    # 建议：支持通过环境变量指定字体绝对路径，或在 Windows 下探测 C:\\Windows\\Fonts\\msyh.ttc / simhei.ttf 等。
     if not os.path.exists(font_path): font_path = "msyh.ttc"
 
     full_html = f"""
