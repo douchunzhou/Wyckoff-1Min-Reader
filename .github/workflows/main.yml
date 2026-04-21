@@ -62,7 +62,7 @@ jobs:
           PYTHONUNBUFFERED: "1"
           ENFORCE_A_SHARE_SCHEDULE: "1"
           A_SHARE_PUSH_SLOTS: "1130,1520"
-          A_SHARE_SLOT_LAG_MINUTES: "90"
+          A_SHARE_SLOT_LAG_MINUTES: "120"
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: "gemini-3-flash-preview"
           GEMINI_MAX_RETRIES: "1"
@@ -83,7 +83,7 @@ jobs:
           PYTHONUNBUFFERED: "1"
           ENFORCE_A_SHARE_SCHEDULE: "0"
           A_SHARE_PUSH_SLOTS: "1130,1520"
-          A_SHARE_SLOT_LAG_MINUTES: "90"
+          A_SHARE_SLOT_LAG_MINUTES: "120"
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: "gemini-3-flash-preview"
           GEMINI_MAX_RETRIES: "1"
